@@ -24,6 +24,9 @@ from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 
 
 #%%
+
+#Окошко для поиска пользователя по айди 
+
 class find_usr(QtWidgets.QMainWindow, find_usr.Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -48,6 +51,8 @@ class find_usr(QtWidgets.QMainWindow, find_usr.Ui_MainWindow):
           sur = operator.field_names[1] +  ': ' + row[1]
           self.listWidget.addItem(sur)
 #%%
+          
+#Окошко с инфой про юзера
 class info_window(QtWidgets.QMainWindow, usr_info.Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -84,6 +89,9 @@ class info_window(QtWidgets.QMainWindow, usr_info.Ui_MainWindow):
         self.close() 
 
 #%%
+        
+#Окошко стартовое, типа меню
+        
 class start_window(QtWidgets.QMainWindow, usr_page.Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -133,6 +141,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.hide()
         #убить запущенный процесс
         #app.exit()
+        sys.exit()
         
         
         
@@ -151,6 +160,9 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.setContextMenu(menu)
    
 #%%
+        
+        
+#Окошко для регистрации пользователя        
 class sign_in_window(QtWidgets.QMainWindow, sign_in_page.Ui_MainWindow):
     
     def __init__(self):
@@ -194,7 +206,8 @@ class sign_in_window(QtWidgets.QMainWindow, sign_in_page.Ui_MainWindow):
            
        
 #%%
-        
+    
+#Окошко самое первое. С логином и регистрацией.    
 class login_window(QtWidgets.QMainWindow, start_page.Ui_MainWindow):
     
     def __init__(self):
@@ -241,7 +254,9 @@ def main():
     global operator
     operator = sql.database_operator()
     
+
     app = QtWidgets.QApplication(sys.argv)    
+    app.setQuitOnLastWindowClosed(False)
     
     trayIcon = SystemTrayIcon(QtGui.QIcon("message.png"))
     trayIcon.show()
