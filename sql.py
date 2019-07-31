@@ -35,12 +35,17 @@ class database_operator():
         
         
         
- #ex = 'INSERT INTO `whatsapp`.`Users` (`Name`, `Surname`, `Password`, `Status`) VALUES ('Arina', 'Zagorodneva', '67890', 'User');'
+#ex = 'INSERT INTO `whatsapp`.`Users` (`Name`, `Surname`, `Password`, `Status`) VALUES ('Arina', 'Zagorodneva', '67890', 'User');'
 
-#Name = '\'A\''
-#Surname = '\'A\''
-#Password = '\'A\''
-#Number = '\'A\''
+#me = '16'
+#friend = '2'
+
+
+
 #operator = database_operator()
+#ex = 'SELECT Time, Message, Sender FROM whatsapp.Dialogs where (Sender = ' + me + ' and Receiver =' + friend + ') or (Sender = ' + friend +  ' and Receiver = ' + me + ');'
 #ex = 'INSERT INTO `whatsapp`.`Users` (`Name`, `Surname`, `Password`, `Number`, `Status`) VALUES ('   + str(Name) + ', ' + str(Surname) + ', ' + str(Password) + ', ' + str(Number) + ',\'User\'' + ');'
 #operator.db_exec(ex)
+
+#for row in operator.lookup():
+ #   print(str(row[0]), row[1], row[2])

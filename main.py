@@ -16,8 +16,11 @@ import usr_page
 import start_page
 import sign_in_page
 import usr_info
+import dialog
+import time
 
-from PyQt5 import QtGui, QtWidgets
+
+from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 
 
@@ -100,8 +103,15 @@ class start_window(QtWidgets.QMainWindow, usr_page.Ui_MainWindow):
         self.pushButton.clicked.connect(self.logout)
         self.pushButton_3.clicked.connect(self.delete_account)
         self.pushButton_5.clicked.connect(self.manipulate_info)
+        self.pushButton_4.clicked.connect(self.go_chat)
         self.label.setText("Welcome to homepage, " + user_name + ' ' + user_surname + '!')
       
+    def go_chat(self):
+        self.cams = dialog_window() 
+        self.cams.show()
+        self.close()
+        
+        
     def delete_account(self):
            ex = 'DELETE FROM `whatsapp`.`Users` WHERE id = ' + '\'' +  identificator + '\'' + ';'
            operator.db_exec(ex)
@@ -131,6 +141,71 @@ class start_window(QtWidgets.QMainWindow, usr_page.Ui_MainWindow):
         self.cams = info_window() 
         self.cams.show()
         self.close()
+
+#%%
+        
+#Окошко для чатика
+class dialog_window(QtWidgets.QMainWindow, dialog.Ui_MainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)  
+        self.pushButton.clicked.connect(self.go_back)
+        self.pushButton_2.clicked.connect(self.collect_data)
+        self.pushButton_3.clicked.connect(self.send_msg)
+        
+        #QtCore.QTimer.singleShot(3000, self.show_dialog)
+        #self.checkThreadTimer = QtCore.QTimer(self)
+        #self.checkThreadTimer.setInterval(500)
+        #self.checkThreadTimer.timeout.connect(self.show_dialog)
+
+
+    def go_back(self):
+        self.cams = start_window() 
+        self.cams.show()
+        self.close()
+    
+    def collect_data(self):
+        me = identificator
+        self.me = str(me)
+        self.friend = str(self.lineEdit_2.text())
+        self.show_dialog(self.friend, self.me)
+    
+    def show_dialog(self, friend, me): 
+        #self.timer = QtCore.QTimer(self)
+        #self.timer.timeout.connect(self.Time)
+        #self.timer.start(1)
+      #while(True):
+        #time.sleep(1000)
+        self.listWidget.clear()
+        ex = 'SELECT Time, Message, Sender FROM whatsapp.Dialogs where (Sender = ' + me + ' and Receiver =' + friend + ') or (Sender = ' + friend +  ' and Receiver = ' + me + ');'
+        operator.db_exec(ex)
+        for row in operator.lookup():   
+                 if str(row[2]) == me:
+                     msg = str(row[0]) + '           ' + 'You: ' + row[1]    
+                 else: 
+                     msg = str(row[0]) + '           ' + 'Opponent: ' + row[1]
+                     
+                 self.listWidget.addItem(msg)
+                 
+        #time.sleep(5)       
+        #self.show_dialog(self.friend, self.me)
+        
+        
+    def send_msg(self):
+        msg = str(self.lineEdit.text())
+        if len(msg) != 0:
+            msg = '\'' + msg + '\''
+            me = '\'' + self.me + '\''
+            friend = '\'' + self.friend + '\''
+            ex = 'INSERT INTO `whatsapp`.`Dialogs` (`Message`, `Sender`, `Receiver`) VALUES ('   + str(msg)  + ', ' + str(me)  + ', ' + str(friend) +  ');'
+            operator.db_exec(ex)
+            operator.db.commit()
+            self.show_dialog(self.friend, self.me)
+            self.lineEdit.clear()
+                 
+
+
+
 
 #%%
 class SystemTrayIcon(QSystemTrayIcon):
@@ -265,6 +340,7 @@ def main():
     window.show() 
     
     app.exec_() 
+
     #sys.exit(app.exec_())
     #trayIcon.exit()
     operator.close()
