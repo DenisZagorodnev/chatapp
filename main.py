@@ -18,13 +18,34 @@ import sign_in_page
 import usr_info
 import dialog
 import time
-
-
+from threading import Thread
+import numpy as np
 from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 
 
 
+#%%
+
+global friend
+global me
+
+friend = None
+me = None
+def show_dialog_2(wdt, friend, me): 
+    
+    if me != None and friend != None:
+        time.sleep(1)
+        wdt.clear()
+        ex = 'SELECT Time, Message, Sender FROM whatsapp.Dialogs where (Sender = ' + me + ' and Receiver =' + friend + ') or (Sender = ' + friend +  ' and Receiver = ' + me + ');'
+        operator.db_exec(ex)
+        for row in operator.lookup():   
+                 if str(row[2]) == me:
+                     msg = str(row[0]) + '           ' + 'You: ' + row[1]    
+                 else: 
+                     msg = str(row[0]) + '           ' + 'Opponent: ' + row[1]
+                     
+                 wdt.addItem(msg)
 
 #%%
 
@@ -152,6 +173,17 @@ class dialog_window(QtWidgets.QMainWindow, dialog.Ui_MainWindow):
         self.pushButton.clicked.connect(self.go_back)
         self.pushButton_2.clicked.connect(self.collect_data)
         self.pushButton_3.clicked.connect(self.send_msg)
+        #self.pushButton_3.clicked.connect(self.test_connect)
+        
+        self.me = None
+        self.friend = None
+        
+        self.test_list = []
+        self.test_time_list = []
+        self.test_status_list = []
+        
+        self.stop_thread = False
+        
         
         #QtCore.QTimer.singleShot(3000, self.show_dialog)
         #self.checkThreadTimer = QtCore.QTimer(self)
@@ -163,46 +195,109 @@ class dialog_window(QtWidgets.QMainWindow, dialog.Ui_MainWindow):
         self.cams = start_window() 
         self.cams.show()
         self.close()
+        self.stop_thread = True
+        self.thread.join()
+        #self.thread._Thread_stop_()
+       
     
     def collect_data(self):
+
         me = identificator
         self.me = str(me)
         self.friend = str(self.lineEdit_2.text())
-        self.show_dialog(self.friend, self.me)
-    
-    def show_dialog(self, friend, me): 
-        #self.timer = QtCore.QTimer(self)
-        #self.timer.timeout.connect(self.Time)
-        #self.timer.start(1)
-      #while(True):
-        #time.sleep(1000)
+        #self.show_dialog(self.me, self.friend)
+        self.thread = Thread(target = self.show_dialog, args = (self.friend, self.me))
+        self.thread.start()
+        #thread.join()
+        
+    def test_connect(self):
+        
+        me = '16'
+        friend = '2'   
         self.listWidget.clear()
         ex = 'SELECT Time, Message, Sender FROM whatsapp.Dialogs where (Sender = ' + me + ' and Receiver =' + friend + ') or (Sender = ' + friend +  ' and Receiver = ' + me + ');'
-        operator.db_exec(ex)
-        for row in operator.lookup():   
-                 if str(row[2]) == me:
-                     msg = str(row[0]) + '           ' + 'You: ' + row[1]    
-                 else: 
-                     msg = str(row[0]) + '           ' + 'Opponent: ' + row[1]
-                     
-                 self.listWidget.addItem(msg)
-                 
-        #time.sleep(5)       
-        #self.show_dialog(self.friend, self.me)
+        #ex = 'INSERT INTO `whatsapp`.`Users` (`Name`, `Surname`, `Password`, `Number`, `Status`) VALUES ('   + str(Name) + ', ' + str(Surname) + ', ' + str(Password) + ', ' + str(Number) + ',\'User\'' + ');'
+        self.operator.db_exec(ex)
+        for row in self.operator.lookup():  
+            msg = str(row[0]) + '           ' + 'You: ' + row[1]
+            self.listWidget.addItem(msg)
         
         
+        
+        
+        
+    def show_dialog(self, friend, me): 
+      
+      if me != None and friend != None:
+          while(True):
+            #self.listWidget.scrollToBottom()
+            operator = sql.database_operator()
+            time.sleep(1)
+            #self.listWidget.clear()
+            ex = 'SELECT Time, Message, Sender FROM whatsapp.Dialogs where (Sender = ' + me + ' and Receiver =' + friend + ') or (Sender = ' + friend +  ' and Receiver = ' + me + ');'
+            operator.db_exec(ex)
+            
+            arr = np.array(operator.lookup())
+            #operator.db.commit()
+            if len(arr) != 0:
+
+                cur_list = list(arr[:,1])
+                
+                diff = len(cur_list) - len(self.test_list)
+                
+                
+                if diff > 0:
+                    new_msgs = list(cur_list[-diff:])
+                    
+                    
+                    
+                    cur_time_list = list(arr[:,0])
+                    for i in range (len(cur_time_list)):
+                        cur_time_list[i] = str(cur_time_list[i])
+                        
+                    new_times = list(cur_time_list[-diff:])
+                    
+                    cur_status_list = list(arr[:,2])
+                    new_statuses = list(cur_status_list[-diff:])
+                    
+                    for i in range(len(new_msgs)):   
+                             if str(new_statuses[i]) == me:
+                                 msg = str(new_times[i]) + '           ' + 'You: ' + new_msgs[i]    
+                             else: 
+                                 msg = str(new_times[i]) + '           ' + 'Opponent: ' + new_msgs[i]
+                              
+                             self.listWidget.addItem(msg)
+                        
+                    self.test_list = cur_list
+                    self.test_time_list = cur_time_list
+                    self.test_status_list = cur_status_list
+                    if self.stop_thread:
+                        break
+                self.listWidget.scrollToBottom() 
+            #else:
+              # self.listWidget.addItem('Нou have not started a dialogue with this person!') 
+            operator.close()
+          #self.show_dialog(self.friend, self.me)           
+            #time.sleep(5)       
+            #self.show_dialog(self.friend, self.me)
+            
+
+         
     def send_msg(self):
+
         msg = str(self.lineEdit.text())
         if len(msg) != 0:
+            operator_2 = sql.database_operator()
             msg = '\'' + msg + '\''
             me = '\'' + self.me + '\''
             friend = '\'' + self.friend + '\''
             ex = 'INSERT INTO `whatsapp`.`Dialogs` (`Message`, `Sender`, `Receiver`) VALUES ('   + str(msg)  + ', ' + str(me)  + ', ' + str(friend) +  ');'
-            operator.db_exec(ex)
-            operator.db.commit()
-            self.show_dialog(self.friend, self.me)
+            operator_2.db_exec(ex)
+            operator_2.db.commit()
+            #self.show_dialog(self.friend, self.me)
             self.lineEdit.clear()
-                 
+            operator_2.close()
+       
 
 
 
@@ -349,6 +444,5 @@ def main():
     
 if __name__ == '__main__':  
     main()
-    
-    #Почему здесь не прерывает?
+
     
