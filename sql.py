@@ -14,7 +14,7 @@ class database_operator():
         self.db = mysql.connector.connect(
             host="localhost",
             user="root",
-            passwd="129056BF3hero",
+            passwd="",
             database = 'whatsapp'
             )
         self.cur = self.db.cursor()
